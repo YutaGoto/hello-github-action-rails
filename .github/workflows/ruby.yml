@@ -1,0 +1,40 @@
+name: Ruby
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:11.3
+        env:
+          POSTGRES_USER: root
+          POSTGRES_DB: hello_github_action_rails_development
+        ports:
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Set up Ruby 2.6
+      uses: actions/setup-ruby@v1
+      with:
+        version: 2.6.3
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+    - run: npm install -g yarn
+    - run: yarn install
+    - name: Build
+      run: |
+        sudo apt install libpq-dev
+        yarn install
+        gem install bundler
+        bundle install --jobs=4 --retry=3 --path=vendor/bundle
+        bundle exec rails db:create
+        bundle exec rails db:schema:load
+    - name: Test
+      run: bundle exec rails test
