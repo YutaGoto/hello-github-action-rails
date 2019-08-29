@@ -1,0 +1,54 @@
+version: 2.1
+
+ruby_image: &ruby_image
+  circleci/ruby:2.6.3-node-browsers
+
+executors:
+  docker-exec:
+    docker:
+      - image: *ruby_image
+        environment:
+          TZ: Asia/Tokyo
+          RAILS_ENV: test
+          PGHOST: 127.0.0.1
+          PGUSER: root
+      - image: circleci/postgres:11.3
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: salmon_run_test
+      - image: circleci/node:10.1.0-browsers
+
+jobs:
+  test:
+    executor: docker-exec
+    working_directory: ~/salmon_run
+    steps:
+      - checkout
+      - run:
+          name: install dependencies packages
+          command: yarn
+      - restore_cache:
+          name: Restore cache salmon-run
+          keys:
+            - salmon-run-{{ checksum "Gemfile.lock" }}
+            - salmon-run-
+      - run:
+          name: update bundler
+          command: gem update bundler
+      - run: bundle install --jobs=4 --retry=3 --path=vendor/bundle
+      - save_cache:
+          name: Saving cache salmon-run
+          key: salmon-run-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+      - run: bundle exec rails db:create
+      - run: bundle exec rails db:schema:load
+      - run:
+          name: Run mini test
+          command: bundle exec rails test
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
