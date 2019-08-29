@@ -15,7 +15,7 @@ executors:
       - image: circleci/postgres:11.3
         environment:
           POSTGRES_USER: root
-          POSTGRES_DB: salmon_run_test
+          POSTGRES_DB: hello_github_action_rails_test
       - image: circleci/node:10.1.0-browsers
 
 jobs:
