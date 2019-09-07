@@ -6,6 +6,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    services:
+      image: postgres
 
     steps:
     - uses: actions/checkout@master
@@ -18,10 +20,6 @@ jobs:
         node-version: '10.x'
     - run: npm install -g yarn
     - run: yarn install
-    - uses: harmon758/postgresql-action@v1
-      with:
-        postgresql version: '11.3'
-        postgresql user: root
     - name: Build
       run: |
         gem install bundler
